@@ -3,3 +3,4 @@ flask-cors
 serpapi
 pandas
 pyinstaller
+gunicorn
