@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Search Tool</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .upload-zone {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            background: #fafafa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px 0;
+        }
+        .upload-zone:hover {
+            background: #f0f0f0;
+            border-color: #999;
+        }
+        .upload-icon {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 8px;
+            color: #666;
+        }
+        .button {
+            background-color: #4299e1;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #3182ce;
+        }
+        .button:disabled {
+            background-color: #a0aec0;
+            cursor: not-allowed;
+        }
+        .status-container {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            display: none;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background-color: #e2e8f0;
+            border-radius: 3px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #4299e1;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .log-container {
+            margin-top: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 13px;
+            font-family: monospace;
+            padding: 8px;
+            background-color: #f1f5f9;
+            border-radius: 4px;
+        }
+        .log-entry {
+            margin: 3px 0;
+            padding: 2px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .log-success { color: #059669; }
+        .log-error { color: #dc2626; }
+        .log-info { color: #4B5563; }
+        .selected-file {
+            margin-top: 10px;
+            padding: 8px;
+            background-color: #f1f5f9;
+            border-radius: 4px;
+            font-size: 14px;
+            display: none;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .settings-icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            color: #666;
+            transition: color 0.3s;
+        }
+        .settings-icon:hover {
+            color: #4299e1;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal-content {
+            position: relative;
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 500px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .modal input {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .close {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <!-- Settings Icon -->
+        <svg class="settings-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="openSettings()">
+            <path d="M12 15a3 3 0 100-6 3 3 0 000 6z"></path>
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path>
+        </svg>
+        <h1>Business Search Tool</h1>
+        <p>Upload a CSV file with business names (requires 'business_name' column)</p>
+        
+        <div id="uploadZone" class="upload-zone">
+            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <p>Drag and drop your CSV file here, or click to select</p>
+        </div>
+
+        <div id="selectedFile" class="selected-file"></div>
+        
+        <button id="processButton" class="button" style="display: none;">
+            Process Business Names
+        </button>
+
+        <div id="statusContainer" class="status-container">
+            <div id="currentStatus" class="log-info">Waiting to start...</div>
+            <div class="progress-bar">
+                <div id="progressBar" class="progress-fill"></div>
+            </div>
+            <div id="logContainer" class="log-container"></div>
+        </div>
+        
+        <div id="error" class="error"></div>
+
+        <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeSettings()">&times;</span>
+            <h2>Settings</h2>
+            <p>Enter your SerpAPI Key:</p>
+            <input type="text" id="apiKeyInput" placeholder="Enter API Key">
+            <button onclick="saveSettings()" class="button">Save</button>
+        </div>
+    </div>
+    
+    </div>
+
+    <script>
+        let selectedFile = null;
+        let isProcessing = false;
+        let totalBusinesses = 0;
+        let processedBusinesses = 0;
+
+        // Settings functions
+        function openSettings() {
+            document.getElementById('settingsModal').style.display = 'block';
+            document.getElementById('apiKeyInput').value = localStorage.getItem('serpApiKey') || '';
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+
+        function saveSettings() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            if (apiKey) {
+                localStorage.setItem('serpApiKey', apiKey);
+                addLogEntry('API Key updated', 'info');
+            }
+            closeSettings();
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('settingsModal');
+            if (event.target == modal) {
+                closeSettings();
+            }
+        }
+
+        function addLogEntry(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function updateProgress(current, total) {
+            const progressBar = document.getElementById('progressBar');
+            const currentStatus = document.getElementById('currentStatus');
+            const percentage = (current / total) * 100;
+            
+            progressBar.style.width = `${percentage}%`;
+            currentStatus.textContent = `Processing ${current} of ${total} businesses`;
+        }
+
+        async function processFile() {
+            if (!selectedFile || isProcessing) return;
+            
+            const processButton = document.getElementById('processButton');
+            const statusContainer = document.getElementById('statusContainer');
+            const error = document.getElementById('error');
+
+            try {
+                isProcessing = true;
+                processButton.disabled = true;
+                statusContainer.style.display = 'block';
+                error.style.display = 'none';
+
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+
+                addLogEntry('Starting process...', 'info');
+                
+                const headers = new Headers();
+                const storedApiKey = localStorage.getItem('serpApiKey');
+                if (storedApiKey) {
+                    headers.append('X-API-Key', storedApiKey);
+                }
+
+                const response = await fetch('/search', {
+                    method: 'POST',
+                    headers: headers,
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Upload failed');
+                }
+
+                // Process the response
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'search_results.csv';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                addLogEntry('Process completed successfully!', 'success');
+                document.getElementById('currentStatus').textContent = 'Processing complete! Downloaded results.';
+
+            } catch (err) {
+                console.error('Error:', err);
+                error.textContent = err.message;
+                error.style.display = 'block';
+                addLogEntry(`Error: ${err.message}`, 'error');
+            } finally {
+                isProcessing = false;
+                processButton.disabled = false;
+            }
+        }
+
+        function handleFileSelect(file) {
+            if (!file) return;
+            
+            selectedFile = file;
+            const selectedFileDiv = document.getElementById('selectedFile');
+            const processButton = document.getElementById('processButton');
+            
+            // Read file to count businesses
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Split by newlines and filter out empty lines
+                const lines = e.target.result.split('\n').filter(line => line.trim());
+                // Subtract 1 for header row
+                totalBusinesses = Math.max(0, lines.length - 1);
+                selectedFileDiv.textContent = `Selected: ${file.name} (${totalBusinesses} businesses)`;
+                selectedFileDiv.style.display = 'block';
+                processButton.style.display = 'block';
+            };
+            reader.readAsText(file);
+            
+            // Reset status
+            document.getElementById('statusContainer').style.display = 'none';
+            document.getElementById('logContainer').innerHTML = '';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('progressBar').style.width = '0%';
+            processedBusinesses = 0;
+        }
+
+        // Event Listeners
+        document.getElementById('uploadZone').addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (!isProcessing) {
+                e.currentTarget.style.background = '#f0f0f0';
+                e.currentTarget.style.borderColor = '#999';
+            }
+        });
+
+        document.getElementById('uploadZone').addEventListener('dragleave', (e) => {
+            if (!isProcessing) {
+                e.currentTarget.style.background = '#fafafa';
+                e.currentTarget.style.borderColor = '#ccc';
+            }
+        });
+
+        document.getElementById('uploadZone').addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (!isProcessing) {
+                e.currentTarget.style.background = '#fafafa';
+                e.currentTarget.style.borderColor = '#ccc';
+                
+                const file = e.dataTransfer.files[0];
+                if (file && file.type === 'text/csv') {
+                    handleFileSelect(file);
+                } else {
+                    document.getElementById('error').textContent = 'Please upload a CSV file';
+                    document.getElementById('error').style.display = 'block';
+                }
+            }
+        });
+
+        document.getElementById('uploadZone').addEventListener('click', () => {
+            if (!isProcessing) {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.csv';
+                input.onchange = e => {
+                    if (e.target.files[0]) {
+                        handleFileSelect(e.target.files[0]);
+                    }
+                };
+                input.click();
+            }
+        });
+
+        document.getElementById('processButton').addEventListener('click', processFile);
+    </script>
+</body>
+</html>
